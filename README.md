@@ -1,4 +1,5 @@
-# NQFO-2026 (IIT GUWAHATI): Volatility Surface Reconstruction
+# NATIONAL QUANT FINANCE OLYMPIAD 2026 (IIT GUWAHATI)
+## Project: Volatility Surface Reconstruction
 
 ## 1. Project Objective
 
