@@ -1,4 +1,4 @@
-# NATIONAL QUANT FINANCE OLYMPIAD  
+# NATIONAL QUANT FINANCE OLYMPIAD -2026 IIT GUWAHATI
 ## Project:Volatility Surface Reconstruction  
 
 ### 1. Problem Statement  
