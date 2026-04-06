@@ -1,54 +1,47 @@
-# NATIONAL QUANT FINANCE OLYMPIAD -2026 IIT GUWAHATI
-## Project:Volatility Surface Reconstruction  
+# NQFO-2026 (IIT GUWAHATI): Volatility Surface Reconstruction
 
-### 1. Problem Statement  
-Financial market data is characterized by a complex superposition of long-term trends, cyclic oscillations, and high-frequency microstructure noise. The objective of this study is to develop a robust, causal regression pipeline that predicts a target variable $y$ by deconstructing the primary signal $f_{0}$.  
+## 1. Project Objective
 
-In the context of derivatives markets, this involves the imputation of the Implied Volatility (IV) Surface. The challenge lies in accurately "filling the holes" in sparse market data while maintaining a continuous and economically consistent manifold that adheres to the fundamental laws of quantitative finance.  
+The primary goal of this project is to reconstruct a complete and financially consistent Implied Volatility (IV) surface by predicting missing data points within a synthetic NIFTY50 dataset.
 
-### 2. Methodology: Hybrid Dual-Domain Architecture  
-The proposed methodology employs a dual-layered approach to separate structural drifts from microstructure artifacts:  
+**The Task:**
+- **Imputation:** Approximately 30–45% of the IV values are missing because certain options do not trade on a given day.
+- **Precision:** Use known IV values to predict missing ones with maximum mathematical accuracy.
+- **Consistency:** Ensure the final surface adheres to the laws of quantitative finance and remains "arbitrage-free".
 
-#### I. Global Phase: Regime-Agnostic Regression (XGBoost)  
-- **Objective:** Establish the baseline surface magnitude and term structure.  
-- **Logic:** Utilizing Gradient Boosted Decision Trees (XGBoost) to map global coordinates—Time-to-Maturity ($\tau$) and Log-Moneyness ($\xi$)—against a dynamic Regime Proxy.  
-- **Regime Analysis:** Applying a windowed median filter to isolate slow-moving structural supply/demand drifts from high-frequency noise.  
+## 2. Methodology: Global-Local Hybrid
 
-#### II. Local Phase: High-Fidelity Calibration (Cubic Splines)  
-- **Objective:** Reconstruct the local "Volatility Smile" with mathematical precision.  
-- **Logic:** Implementing Natural Cubic Splines to ensure $C^2$ continuity. This transforms discrete observations into a continuous, frequency-stable manifold.  
+To achieve high-precision results, this pipeline utilizes a two-tier modeling approach:
 
-### 3. Causal Feature Engineering  
-To capture the sequential evolution of the price signal, the pipeline employs strictly causal engineering:  
+- **Global Regime Analysis (XGBoost):** An XGBoost regressor captures the broad "terrain" of the surface by learning the relationship between market regimes, time-to-maturity ($\tau$), and moneyness.
+- **Local Calibration (Cubic Splines):** Known IV values in the test set are treated as anchor points. We apply Natural Cubic Splines to these anchors to interpolate the "smile" of each option chain with high fidelity.
 
-- **Log-Moneyness Transformation:** Normalizing strikes relative to the spot price: $\xi = \ln(K/S)$.  
-- **Cyclical Temporal Encoding:** Using trigonometric shift operations to incorporate adjacent temporal information and capture oscillatory market behavior.  
-- **Interaction Ratios:** Modeling dependencies between spectral bands (Trend vs. Noise) using numerically stable ratio features.  
+## 3. Causal Feature Engineering
 
-### 4. Static Arbitrage Enforcement  
-A valid financial manifold must be free of static arbitrage. Our pipeline enforces the following constraints:  
+To capture the sequential evolution of the price signal, the pipeline employs strictly causal engineering:
 
-#### Horizontal Convexity (No-Butterfly Arbitrage)  
-By utilizing Natural Cubic Splines, we ensure that the option price is a convex function of the strike. This guarantees a positive State Price Density:  
+- **Log-Moneyness Transformation:** Normalizing strikes relative to the spot price: $\xi = \ln(K/S)$.
+- **Cyclical Temporal Encoding:** Using trigonometric shift operations to incorporate adjacent temporal information and capture oscillatory market behavior.
+- **Interaction Ratios:** Modeling dependencies between spectral bands (Trend vs. Noise) using numerically stable ratio features.
 
-$$
-\frac{\partial^2 C}{\partial K^2} > 0
-$$  
+## 4. Financial Integrity: Arbitrage-Free Constraints
 
-#### Vertical Monotonicity (No-Calendar Spread Arbitrage)  
-The pipeline monitors the Total Implied Variance ($w = \sigma^2 \tau$). We apply a cumulative maximum operation to ensure that total variance is non-decreasing across the term structure, preventing outlier distortion:  
+A valid market surface must be economically sound. Our pipeline enforces the following constraints:
 
-$$
-\frac{\partial w}{\partial \tau} \ge 0
-$$  
+- **No-Butterfly Arbitrage:** By using $C^2$ continuous splines, we ensure the "smile" is convex. This prevents negative probability density:
+  $$\frac{\partial^2 C}{\partial K^2} > 0$$
 
-### 5. Results and Validation  
-The model's performance is assessed using Root Mean Squared Error (RMSE) for magnitude accuracy and Spearman's Rank Correlation for directional alignment.  
+- **No-Calendar Spread Arbitrage:** We monitor Total Implied Variance ($w = \sigma^2 \tau$) and ensure it is non-decreasing over time. This prevents mathematically impossible variance predictions:
+  $$\frac{\partial w}{\partial \tau} \ge 0$$
 
-- **Time-Based Validation RMSE:** `0.691849`  
-- **Surface Stability:** High spectral interaction stability confirms the model's ability to effectively approximate signals even in zero-inflated market regimes.  
+## 5. Performance & Results
 
-### 6. Repository Structure & Usage  
+The model was validated using a walk-forward, time-based split to ensure robustness against market shifts:
+
+- **Time-Based Validation RMSE:** `0.691849`
+- **Calibration:** A final "pinning" logic restores anchor points to their original values to ensure perfect alignment with known market data.
+
+## 6. Repository Structure
 - **solution.py** – Full runnable Python solution that reproduces the submission  
 - **requirements.txt** – Dependencies (`pandas`, `numpy`, `xgboost`, `scipy`)  
 - **methodology.pdf** – Comprehensive 2-page write-up
